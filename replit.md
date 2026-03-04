@@ -65,7 +65,14 @@ context/
 - Footer with integration/API docs links
 - NativeTabs with liquid glass on iOS 26+
 
+## Replit Environment
+
+- **Database**: PostgreSQL via Replit's built-in DB (DATABASE_URL auto-configured)
+- **Backend workflow**: `npm run server:dev` — Express server on port 5000 (webview)
+- **Frontend**: Expo app previewed via Expo Go (scan QR code from the landing page)
+- Schema managed with Drizzle ORM — run `npm run db:push` to sync schema changes
+
 ## Planned
 
-- Supabase integration for real backend (user provides API key)
-- Real-time updates via Supabase Realtime
+- Real backend integration (currently uses React Context / AsyncStorage for state)
+- Real-time updates
