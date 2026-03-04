@@ -6,11 +6,11 @@ import { Platform, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/colors";
 import { useTickets } from "@/context/TicketContext";
+import { useAuth } from "@/context/AuthContext";
 
-function NativeTabLayout() {
+function AgentNativeTabs() {
   const { tickets } = useTickets();
   const openCount = tickets.filter((t) => t.status === "open").length;
-
   return (
     <NativeTabs>
       <NativeTabs.Trigger name="dashboard">
@@ -38,9 +38,40 @@ function NativeTabLayout() {
   );
 }
 
+function CustomerNativeTabs() {
+  const { tickets } = useTickets();
+  const { user } = useAuth();
+  const myOpen = tickets.filter(
+    (t) => t.customerId === user?.id && t.status === "open"
+  ).length;
+  return (
+    <NativeTabs>
+      <NativeTabs.Trigger name="tickets">
+        <Icon sf={{ default: "tray", selected: "tray.fill" }} />
+        <Label>My Tickets</Label>
+        {myOpen > 0 && <Badge>{String(myOpen)}</Badge>}
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="chats">
+        <Icon sf={{ default: "message", selected: "message.fill" }} />
+        <Label>Chat</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="profile">
+        <Icon sf={{ default: "person.circle", selected: "person.circle.fill" }} />
+        <Label>Profile</Label>
+      </NativeTabs.Trigger>
+    </NativeTabs>
+  );
+}
+
 function ClassicTabLayout() {
   const { tickets } = useTickets();
+  const { user } = useAuth();
+  const isCustomer = user?.role === "customer";
   const openCount = tickets.filter((t) => t.status === "open").length;
+  const myOpenCount = tickets.filter(
+    (t) => t.customerId === user?.id && t.status === "open"
+  ).length;
+
   const isWeb = Platform.OS === "web";
   const isIOS = Platform.OS === "ios";
 
@@ -72,17 +103,31 @@ function ClassicTabLayout() {
     >
       <Tabs.Screen
         name="dashboard"
-        options={{
-          title: "Dashboard",
-          tabBarIcon: ({ color, size }) => <Ionicons name="bar-chart" size={size} color={color} />,
-        }}
+        options={
+          isCustomer
+            ? { href: null }
+            : {
+                title: "Dashboard",
+                tabBarIcon: ({ color, size }) => (
+                  <Ionicons name="bar-chart" size={size} color={color} />
+                ),
+              }
+        }
       />
       <Tabs.Screen
         name="tickets"
         options={{
-          title: "Tickets",
-          tabBarIcon: ({ color, size }) => <Ionicons name="file-tray" size={size} color={color} />,
-          tabBarBadge: openCount > 0 ? openCount : undefined,
+          title: isCustomer ? "My Tickets" : "Tickets",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="file-tray" size={size} color={color} />
+          ),
+          tabBarBadge: isCustomer
+            ? myOpenCount > 0
+              ? myOpenCount
+              : undefined
+            : openCount > 0
+            ? openCount
+            : undefined,
           tabBarBadgeStyle: { backgroundColor: Colors.accent },
         }}
       />
@@ -90,21 +135,31 @@ function ClassicTabLayout() {
         name="chats"
         options={{
           title: "Chat",
-          tabBarIcon: ({ color, size }) => <Ionicons name="chatbubbles" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="chatbubbles" size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="knowledge"
-        options={{
-          title: "Knowledge",
-          tabBarIcon: ({ color, size }) => <Ionicons name="book" size={size} color={color} />,
-        }}
+        options={
+          isCustomer
+            ? { href: null }
+            : {
+                title: "Knowledge",
+                tabBarIcon: ({ color, size }) => (
+                  <Ionicons name="book" size={size} color={color} />
+                ),
+              }
+        }
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color, size }) => <Ionicons name="person-circle" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-circle" size={size} color={color} />
+          ),
         }}
       />
     </Tabs>
@@ -112,8 +167,11 @@ function ClassicTabLayout() {
 }
 
 export default function TabLayout() {
+  const { user } = useAuth();
+  const isCustomer = user?.role === "customer";
+
   if (isLiquidGlassAvailable()) {
-    return <NativeTabLayout />;
+    return isCustomer ? <CustomerNativeTabs /> : <AgentNativeTabs />;
   }
   return <ClassicTabLayout />;
 }

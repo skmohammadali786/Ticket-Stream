@@ -22,14 +22,12 @@ function MenuItem({
   label,
   value,
   onPress,
-  color,
   danger,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   value?: string;
   onPress?: () => void;
-  color?: string;
   danger?: boolean;
 }) {
   return (
@@ -37,8 +35,8 @@ function MenuItem({
       onPress={() => { Haptics.selectionAsync(); onPress?.(); }}
       style={({ pressed }) => [styles.menuItem, { opacity: pressed ? 0.85 : 1 }]}
     >
-      <View style={[styles.menuIconBg, { backgroundColor: (danger ? Colors.urgentBg : Colors.surface) }]}>
-        <Ionicons name={icon} size={20} color={danger ? Colors.urgentText : (color || Colors.primary)} />
+      <View style={[styles.menuIconBg, { backgroundColor: danger ? Colors.urgentBg : Colors.surface }]}>
+        <Ionicons name={icon} size={20} color={danger ? Colors.urgentText : Colors.primary} />
       </View>
       <Text style={[styles.menuLabel, danger && { color: Colors.urgentText }]}>{label}</Text>
       <View style={{ flex: 1 }} />
@@ -52,11 +50,13 @@ export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { user, logout } = useAuth();
   const { tickets } = useTickets();
+  const isAgent = user?.role === "agent";
 
   const myTickets = tickets.filter((t) =>
-    user?.role === "customer" ? t.customerId === user.id : t.assigneeId === user?.id
+    isAgent ? t.assigneeId === user?.id : t.customerId === user?.id
   );
-  const resolvedTickets = myTickets.filter((t) => t.status === "resolved");
+  const resolved = myTickets.filter((t) => t.status === "resolved").length;
+  const open = myTickets.filter((t) => t.status === "open").length;
 
   const topInsets = insets.top + (Platform.OS === "web" ? 67 : 0);
 
@@ -94,12 +94,12 @@ export default function ProfileScreen() {
         <Text style={styles.profileEmail}>{user?.email}</Text>
         <View style={styles.roleBadge}>
           <Ionicons
-            name={user?.role === "customer" ? "person" : "headset"}
+            name={isAgent ? "headset" : "person"}
             size={13}
             color={Colors.primary}
           />
           <Text style={styles.roleText}>
-            {user?.role === "customer" ? "Customer" : "Support Agent"}
+            {isAgent ? "Support Agent" : "Customer"}
           </Text>
         </View>
       </LinearGradient>
@@ -107,46 +107,63 @@ export default function ProfileScreen() {
       <View style={styles.statsRow}>
         <View style={styles.statItem}>
           <Text style={styles.statNum}>{myTickets.length}</Text>
-          <Text style={styles.statLbl}>{user?.role === "customer" ? "My Tickets" : "Assigned"}</Text>
+          <Text style={styles.statLbl}>{isAgent ? "Assigned" : "My Tickets"}</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statNum}>{resolvedTickets.length}</Text>
-          <Text style={styles.statLbl}>Resolved</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statNum}>{myTickets.filter((t) => t.status === "open").length}</Text>
+          <Text style={[styles.statNum, { color: Colors.accent }]}>{open}</Text>
           <Text style={styles.statLbl}>Open</Text>
         </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <Text style={[styles.statNum, { color: Colors.success }]}>{resolved}</Text>
+          <Text style={styles.statLbl}>Resolved</Text>
+        </View>
       </View>
 
-      <Text style={styles.sectionLabel}>Account</Text>
-      <View style={styles.menuGroup}>
-        <MenuItem icon="person-outline" label="Edit Profile" onPress={() => {}} />
-        <MenuItem icon="notifications-outline" label="Notifications" onPress={() => {}} />
-        <MenuItem icon="lock-closed-outline" label="Security" onPress={() => {}} />
-      </View>
+      {isAgent && (
+        <>
+          <Text style={styles.sectionLabel}>Agent Tools</Text>
+          <View style={styles.menuGroup}>
+            <MenuItem
+              icon="book-outline"
+              label="Knowledge Base"
+              onPress={() => router.push("/(tabs)/knowledge")}
+            />
+            <MenuItem
+              icon="code-slash-outline"
+              label="API Reference"
+              value="v2.0"
+              onPress={() => {}}
+            />
+            <MenuItem
+              icon="git-network-outline"
+              label="Webhooks & Integrations"
+              onPress={() => {}}
+            />
+          </View>
+        </>
+      )}
 
-      <Text style={styles.sectionLabel}>Support</Text>
-      <View style={styles.menuGroup}>
-        <MenuItem
-          icon="book-outline"
-          label="Knowledge Base"
-          onPress={() => router.push("/(tabs)/knowledge")}
-        />
-        <MenuItem icon="chatbubble-ellipses-outline" label="Community Forum" onPress={() => {}} />
-        <MenuItem icon="mail-outline" label="Contact Support" onPress={() => {}} />
-      </View>
+      {!isAgent && (
+        <>
+          <Text style={styles.sectionLabel}>Support</Text>
+          <View style={styles.menuGroup}>
+            <MenuItem
+              icon="add-circle-outline"
+              label="Submit New Ticket"
+              onPress={() => router.push("/(tabs)/tickets")}
+            />
+            <MenuItem
+              icon="chatbubble-ellipses-outline"
+              label="Live Chat"
+              onPress={() => router.push("/(tabs)/chats")}
+            />
+          </View>
+        </>
+      )}
 
-      <Text style={styles.sectionLabel}>Integrations</Text>
-      <View style={styles.menuGroup}>
-        <MenuItem icon="code-slash-outline" label="API Reference" value="v2.0" onPress={() => {}} />
-        <MenuItem icon="git-network-outline" label="Webhooks" onPress={() => {}} />
-        <MenuItem icon="apps-outline" label="Browse Integrations" onPress={() => {}} />
-      </View>
-
-      <Text style={styles.sectionLabel}>More</Text>
+      <Text style={styles.sectionLabel}>App</Text>
       <View style={styles.menuGroup}>
         <MenuItem icon="document-text-outline" label="Terms of Service" onPress={() => {}} />
         <MenuItem icon="shield-outline" label="Privacy Policy" onPress={() => {}} />
@@ -159,6 +176,19 @@ export default function ProfileScreen() {
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>TicketStream · Support at the speed of now</Text>
+        <View style={styles.footerLinks}>
+          <Pressable>
+            <Text style={styles.footerLink}>Integrations</Text>
+          </Pressable>
+          <Text style={styles.footerDot}>·</Text>
+          <Pressable>
+            <Text style={styles.footerLink}>API Docs</Text>
+          </Pressable>
+          <Text style={styles.footerDot}>·</Text>
+          <Pressable>
+            <Text style={styles.footerLink}>Status</Text>
+          </Pressable>
+        </View>
       </View>
     </ScrollView>
   );
@@ -252,6 +282,9 @@ const styles = StyleSheet.create({
   },
   menuLabel: { fontSize: 15, fontFamily: "Inter_500Medium", color: Colors.text },
   menuValue: { fontSize: 14, fontFamily: "Inter_400Regular", color: Colors.textMuted, marginRight: 4 },
-  footer: { alignItems: "center", paddingVertical: 20 },
+  footer: { alignItems: "center", paddingVertical: 20, gap: 10 },
   footerText: { fontSize: 12, fontFamily: "Inter_400Regular", color: Colors.textMuted },
+  footerLinks: { flexDirection: "row", alignItems: "center", gap: 8 },
+  footerLink: { fontSize: 13, fontFamily: "Inter_500Medium", color: Colors.primary },
+  footerDot: { color: Colors.textMuted },
 });
