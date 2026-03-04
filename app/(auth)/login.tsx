@@ -25,16 +25,16 @@ export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const { login } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>("customer");
-  const [email, setEmail] = useState("customer@demo.com");
-  const [password, setPassword] = useState("demo123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const handleTabChange = (tab: Tab) => {
     Haptics.selectionAsync();
     setActiveTab(tab);
-    setEmail(tab === "customer" ? "customer@demo.com" : "agent@demo.com");
-    setPassword("demo123");
+    setEmail("");
+    setPassword("");
   };
 
   const handleLogin = async () => {
@@ -91,12 +91,12 @@ export default function LoginScreen() {
                   onPress={() => handleTabChange(tab)}
                   style={[styles.tabPill, activeTab === tab && styles.tabPillActive]}
                 >
-                  <Ionicons
-                    name={tab === "customer" ? "person" : "headset"}
-                    size={16}
-                    color={activeTab === tab ? Colors.white : Colors.textSecondary}
-                  />
                   <Text style={[styles.tabLabel, activeTab === tab && styles.tabLabelActive]}>
+                    <Ionicons
+                      name={tab === "customer" ? "person" : "headset"}
+                      size={16}
+                      color={activeTab === tab ? Colors.white : Colors.textSecondary}
+                    />{" "}
                     {tab === "customer" ? "Customer" : "Agent"}
                   </Text>
                 </Pressable>
@@ -163,12 +163,6 @@ export default function LoginScreen() {
               </Pressable>
             </View>
 
-            <View style={styles.demoHint}>
-              <Ionicons name="information-circle-outline" size={14} color={Colors.textMuted} />
-              <Text style={styles.demoHintText}>
-                Demo: {activeTab === "customer" ? "customer@demo.com" : "agent@demo.com"} / demo123
-              </Text>
-            </View>
           </View>
 
           <View style={styles.footer}>

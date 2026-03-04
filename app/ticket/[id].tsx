@@ -195,6 +195,16 @@ export default function TicketDetailScreen() {
           </>
         )}
 
+        {ticket.status !== 'resolved' && ticket.status !== 'closed' && (
+          <Pressable
+            onPress={() => updateTicketStatus(ticket.id, 'resolved')}
+            style={styles.doneButton}
+          >
+            <Ionicons name="checkmark-circle" size={20} color={Colors.white} />
+            <Text style={styles.doneButtonText}>Mark as Done</Text>
+          </Pressable>
+        )}
+
         <Pressable
           onPress={() => router.push({ pathname: "/chat/[id]", params: { id: ticket.id } })}
           style={styles.chatButton}
@@ -368,6 +378,17 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   chatButtonText: { fontSize: 16, fontFamily: "Inter_700Bold", color: Colors.white },
+  doneButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    backgroundColor: Colors.success,
+    borderRadius: 16,
+    paddingVertical: 16,
+    marginTop: 8,
+  },
+  doneButtonText: { fontSize: 16, fontFamily: "Inter_700Bold", color: Colors.white },
   pickerOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.4)",

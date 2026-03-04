@@ -165,8 +165,8 @@ export default function ProfileScreen() {
 
       <Text style={styles.sectionLabel}>App</Text>
       <View style={styles.menuGroup}>
-        <MenuItem icon="document-text-outline" label="Terms of Service" onPress={() => {}} />
-        <MenuItem icon="shield-outline" label="Privacy Policy" onPress={() => {}} />
+        <MenuItem icon="document-text-outline" label="Terms of Service" onPress={() => router.push('/terms-of-service')} />
+        <MenuItem icon="shield-outline" label="Privacy Policy" onPress={() => router.push('/privacy-policy')} />
         <MenuItem icon="information-circle-outline" label="App Version" value="1.0.0" />
       </View>
 
